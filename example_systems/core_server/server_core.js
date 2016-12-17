@@ -1,44 +1,47 @@
 'use strict';
 
-import BackendService from './backend';
+import AssetService from './assets';
+import ElasticsearchService from './elasticsearch';
 import HttpService from './http';
 import Logger from './logger';
-import NotifierService from './notifier';
 import PluginService from './plugin';
 import ProcessService from './process';
-import RendererService from './renderer';
+import RestService from './rest';
 import Services from './services';
 import SettingsService from './settings';
 
-export default class BrowserCore {
+export default class ServerCore {
   constructor(env, config) {
-    const logger = Logger.getLogger('BrowserCore');
+    const logger = Logger.getLogger('ServerCore');
 
     const http = new HttpService({ env });
 
-    const backend = new BackendService({ config, http });
+    const elasticsearch = new ElasticsearchService({ config, http });
 
-    const settings = new SettingsService({ backend, config });
+    const settings = new SettingsService({ config, elasticsearch });
 
-    const notifier = new NotifierService({ settings });
-
-    const plugins = new PluginService({ env, settings });
+    const assets = new AssetService({ env });
 
     const processes = new ProcessService({ settings });
 
-    const renderer = new RendererService({
-      notifier,
-      plugins,
-      settings,
+    const rest = new RestService({ settings });
+
+    const plugins = new PluginService({
+      assets,
+      elasticsearch,
+      env,
+      processes,
+      rest,
+      settings
     });
 
     const services = new Services({
-      backend,
+      assets,
+      elasticsearch,
       http,
-      notifier,
       plugins,
       processes,
-      renderer,
+      rest,
       settings,
     });
 
